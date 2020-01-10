@@ -90,7 +90,6 @@ namespace FastDataReaderMapper
 
         public static async IAsyncEnumerable<T> MapAsync<T>(this IDataReader reader, [EnumeratorCancellation]CancellationToken cancellationToken = default) where T : new()
         {
-            Console.WriteLine("Data aquired to mapper. Processing...");
             HashSet<string> tableFields = new HashSet<string>();
             for (int i = 0; i < reader.FieldCount; i++)
                 tableFields.Add(reader.GetName(i).ToLower());
