@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+	<LangVersion>8.0</LangVersion>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Authors>Nikita Bestuzhev aka LordXaosa</Authors>
+	<Company />
+	<Description>Fast data mapper from IDataReader to any custom type object. IAsyncEnumerable support.</Description>
+	<Copyright>Copyright 2020</Copyright>
+	<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+	<PackageProjectUrl>https://github.com/LordXaosa/FastDataReaderMapper</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/LordXaosa/FastDataReaderMapper</RepositoryUrl>
+	<PackageTags>IDataReader mapper async</PackageTags> 
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+    <PackageReference Include="System.Interactive.Async" Version="4.0.0" />
+  </ItemGroup>
+
+</Project>
