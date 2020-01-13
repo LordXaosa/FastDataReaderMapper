@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
 	<LangVersion>8.0</LangVersion>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<Authors>Nikita Bestuzhev aka LordXaosa</Authors>
@@ -12,8 +12,10 @@
 	<PackageProjectUrl>https://github.com/LordXaosa/FastDataReaderMapper</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/LordXaosa/FastDataReaderMapper</RepositoryUrl>
 	<PackageTags>IDataReader mapper async</PackageTags>
-	<Version>1.0.2</Version>
-	<PackageReleaseNotes>For net standard 2.1 implement a bit faster property setter on System.Reflection.Emit</PackageReleaseNotes> 
+	<Version>1.0.3</Version>
+	<PackageReleaseNotes>Fast IL instructions for property setter now available for net standard 2.0</PackageReleaseNotes>
+	<AssemblyVersion>1.0.3.0</AssemblyVersion>
+	<FileVersion>1.0.3.0</FileVersion> 
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
@@ -23,6 +25,7 @@
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
     <PackageReference Include="System.Interactive.Async" Version="4.0.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
 
 </Project>

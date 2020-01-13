@@ -80,8 +80,7 @@ namespace FastDataReaderMapper
         }
         private static Action<T, object> BuildUntypedSetter<T>(PropertyInfo pi) where T: new()
         {
-#if NETSTANDARD2_0
-            var targetType = pi.DeclaringType;
+            /*var targetType = pi.DeclaringType;
             var methodInfo = pi.GetSetMethod();
             var exTarget = Expression.Parameter(targetType, "t");
             var exValue = Expression.Parameter(typeof(object), "p");
@@ -89,8 +88,7 @@ namespace FastDataReaderMapper
                Expression.Convert(exValue, pi.PropertyType));
             var lambda = Expression.Lambda<Action<T, object>>(exBody, exTarget, exValue);
             var action = lambda.Compile();
-            return action;
-#elif NET461 || NETSTANDARD2_1 || NETCOREAPP3_0 || NETCOREAPP3_1
+            return action;*/
             DynamicMethod method = new DynamicMethod(
                 "PropertySetter",
                 typeof(void),
@@ -105,7 +103,6 @@ namespace FastDataReaderMapper
             il.EmitCall(OpCodes.Callvirt, pi.GetSetMethod(), null);
             il.Emit(OpCodes.Ret);
             return (Action<T, object>)method.CreateDelegate(typeof(Action<T, object>));
-#endif
         }
 
         private static Func<T, object> BuildUntypedGetter<T>(PropertyInfo propertyInfo)
