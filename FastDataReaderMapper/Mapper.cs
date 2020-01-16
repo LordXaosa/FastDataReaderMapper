@@ -17,7 +17,7 @@ namespace FastDataReaderMapper
         {
             List<T> list = new List<T>();
             PrepareType(reader, out PropertyInfo[] properties, out HashSet<string> tableFields,
-                out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename)> header);
+                out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order)> header);
             while (reader.Read())
             {
                 list.Add(MapRow(reader, properties, tableFields, header));
@@ -27,7 +27,7 @@ namespace FastDataReaderMapper
         public static async IAsyncEnumerable<T> MapAsync<T>(this IDataReader reader, [EnumeratorCancellation]CancellationToken cancellationToken = default) where T : new()
         {
             PrepareType(reader, out PropertyInfo[] properties, out HashSet<string> tableFields,
-                out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename)> header);
+                out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order)> header);
             while (reader.Read())
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -37,33 +37,42 @@ namespace FastDataReaderMapper
         }
 
         private static void PrepareType<T>(IDataReader reader, out PropertyInfo[] properties, out HashSet<string> tableFields,
-            out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename)> header) where T: new()
+            out Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order)> header) where T : new()
         {
             tableFields = new HashSet<string>();
-            for (int i = 0; i < reader.FieldCount; i++)
-                tableFields.Add(reader.GetName(i).ToLower());
+            try
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                    tableFields.Add(reader.GetName(i).ToLower());
+            }
+            catch (NotSupportedException) { }
+            catch (NotImplementedException) { }
 
             properties = typeof(T).GetProperties();
-            header = new Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename)>();
+            header = new Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order)>();
             foreach (PropertyInfo pi in properties)
             {
-                string name = pi.GetCustomAttribute<ColumnAttribute>()?.Name ?? pi.Name;
-                header.Add(pi, (name, Nullable.GetUnderlyingType(pi.PropertyType) ?? pi.PropertyType, BuildUntypedSetter<T>(pi), name.ToLower()));
+                ColumnAttribute col = pi.GetCustomAttribute<ColumnAttribute>();
+                int? order = col?.Order==-1?null:col?.Order;
+                string name = col?.Name ?? pi.Name;
+                header.Add(pi, (name, Nullable.GetUnderlyingType(pi.PropertyType) ?? pi.PropertyType, BuildUntypedSetter<T>(pi), name.ToLower(), order));
             }
         }
 
         private static T MapRow<T>(IDataRecord row, PropertyInfo[] properties, HashSet<string> tableFields,
-            Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename)> header) where T: new()
+            Dictionary<PropertyInfo, (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order)> header) where T : new()
         {
             T result = new T();
             foreach (PropertyInfo pi in properties)
             {
-                (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename) tuple = header[pi];
+                (string Name, Type PropertyType, Action<T, object> Setter, string LowerCasename, int? Order) tuple = header[pi];
                 string name = tuple.Name;
 
-                if (!string.IsNullOrEmpty(name) && tableFields.Contains(tuple.LowerCasename))
+                if (!string.IsNullOrEmpty(name) && ((tuple.Order.HasValue && tuple.Order < row.FieldCount) || tableFields.Contains(tuple.LowerCasename)))
                 {
-                    object val = row[name];
+                    object val = tuple.Order != null ? row[tuple.Order.Value] : row[name];
+                    if (val == null)
+                        continue;
                     Type dataType = val.GetType();
                     if (pi.PropertyType.IsAssignableFrom(dataType))
                         tuple.Setter(result, val);
@@ -78,7 +87,7 @@ namespace FastDataReaderMapper
             }
             return result;
         }
-        private static Action<T, object> BuildUntypedSetter<T>(PropertyInfo pi) where T: new()
+        private static Action<T, object> BuildUntypedSetter<T>(PropertyInfo pi) where T : new()
         {
             /*var targetType = pi.DeclaringType;
             var methodInfo = pi.GetSetMethod();
